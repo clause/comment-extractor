@@ -4,7 +4,7 @@ import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.CompilationUnit
 import java.io.File
 
-class ASTParser(private val level: Int = AST.JLS11,
+class ASTParser(private val level: Int = AST.JLS12,
                 private val kind: Int = ASTParser.K_COMPILATION_UNIT,
                 private val resolveBindings: Boolean = true,
                 classpathEntries: Iterable<File> = emptyList(),

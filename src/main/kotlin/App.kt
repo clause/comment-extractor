@@ -13,7 +13,7 @@ import java.io.File
 class App : CliktCommand() {
 
     private val outputFile: File by option().file(exists = false).default(File("output.csv"))
-    private val sources: List<File> by argument().file(exists = true).multiple()
+    private val sources: List<File> by argument().file(exists = true, readable = true).multiple()
 
     override fun run() {
 
@@ -24,7 +24,11 @@ class App : CliktCommand() {
 
             writer.writeNext(arrayOf("path", "comment range", "sentence"))
 
-            for (source in sources) {
+            val javaSources = sources.flatMap { it.walk().asIterable() }
+                    .filter { it.isFile }
+                    .filter { "java" == it.extension }
+
+            for (source in javaSources) {
 
                 val comments = parser.parse(source).find<Comment>()
 
