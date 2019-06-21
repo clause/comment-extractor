@@ -12,7 +12,7 @@ import java.io.File
 
 class App : CliktCommand() {
 
-    private val outputFile: File by option().file(fileOkay = false).default(File("output.csv"))
+    private val outputFile: File by option().file(exists = false).default(File("output.csv"))
     private val sources: List<File> by argument().file(exists = true).multiple()
 
     override fun run() {
