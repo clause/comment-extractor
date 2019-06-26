@@ -4,42 +4,47 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
+import com.github.javaparser.JavaParser
+import com.github.javaparser.ast.comments.BlockComment
+import com.github.javaparser.ast.comments.Comment
+import com.github.javaparser.ast.comments.JavadocComment
+import com.github.javaparser.ast.comments.LineComment
+import com.google.googlejavaformat.java.Formatter
 import com.opencsv.CSVWriter
 import edu.stanford.nlp.simple.Document
 import edu.stanford.nlp.simple.Sentence
-import org.eclipse.jdt.core.dom.*
 import java.io.File
 
 class App : CliktCommand() {
 
     private val outputFile: File by option().file(exists = false).default(File("output.csv"))
     private val sources: List<File> by argument().file(exists = true, readable = true).multiple()
+    private val formatter = Formatter()
+    private val parser = JavaParser()
 
     override fun run() {
 
-        val parser = ASTParser()
+        CSVWriter(outputFile.writer()).use { out ->
 
-        outputFile.writer().use { out ->
-            val writer = CSVWriter(out)
+            out.writeNext(arrayOf("path", "comment range", "sentence"))
 
-            writer.writeNext(arrayOf("path", "comment range", "sentence"))
-
-            val javaSources = sources.flatMap { it.walk().asIterable() }
+            val javaFiles = sources.asSequence()
+                    .flatMap { it.walk() }
                     .filter { it.isFile }
                     .filter { "java" == it.extension }
 
-            for (source in javaSources) {
+            for (file in javaFiles) {
 
-                val comments = parser.parse(source).find<Comment>()
+                val path = file.path
+                val source = formatter.formatSource(file.readText())
 
-                for (comment in comments) {
-                    val range = comment.startPosition until comment.startPosition + comment.length
+                parser.parse(source).commentsCollection.ifPresent { commentsCollection ->
+                    for (comment in commentsCollection.comments) {
 
-                    val text = extractTextFromComment(comment)
-                    val sentences = splitToSentences(text)
+                        val range = comment.range.map { it.toString() }.orElse("")
+                        val text = extractTextFromComment(comment)
 
-                    for (sentence in sentences) {
-                        writer.writeNext(arrayOf(source.path, range.toString(), sentence.text()))
+                        splitToSentences(text).forEach { out.writeNext(arrayOf(path, range, it.text())) }
                     }
                 }
             }
@@ -47,18 +52,24 @@ class App : CliktCommand() {
     }
 
     private fun extractTextFromComment(comment: Comment): String = when (comment) {
-        is Javadoc -> {
-            // Grab TagElements with no tag names.  This is the text before the first doctag.  Strip any leading whitespace and *'s
-            comment.tags()
-                    .filterIsInstance<TagElement>()
-                    .filter { null == it.tagName }
-                    .joinToString { it.toString() }
-                    .replaceFirst(Regex("^[\\s*]+"), "")
+        is JavadocComment -> {
+            comment.parse().description.toText().lines().joinToString(" ")
         }
-        is BlockComment, is LineComment -> {
+        is BlockComment -> {
             comment.toString()
+                    .replace(Regex("^/"), " ")
+                    .replace(Regex("/$"), " ")
+                    .trimMargin("*")
+                    .trimIndent()
+                    .lines()
+                    .joinToString(" ")
         }
-        else -> throw RuntimeException("Unknown comment type: ${comment.javaClass}")
+        is LineComment -> {
+            comment.toString().replace(Regex("^[\t ]*\\\\[\t ]*"), "")
+        }
+        else -> {
+            throw RuntimeException("Unknown comment type: ${comment.javaClass}")
+        }
     }
 
     // Use Stanford CoreNLP to split a chunk of text into individual sentences
