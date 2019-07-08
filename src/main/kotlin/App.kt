@@ -2,7 +2,9 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.comments.BlockComment
@@ -18,7 +20,11 @@ import java.io.File
 class App : CliktCommand() {
 
     private val outputFile: File by option().file(exists = false).default(File("output.csv"))
+    private val commentTypes: List<String> by option().choice("javadoc", "block", "line").multiple(listOf("javadoc", "block", "line"))
+
     private val sources: List<File> by argument().file(exists = true, readable = true).multiple()
+
+
     private val formatter = Formatter()
     private val parser = JavaParser()
 
