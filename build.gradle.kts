@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("com.github.javaparser:javaparser-core:3.14.5")
+    implementation("com.github.javaparser:javaparser-core:3.14.11")
     implementation("com.github.ajalt:clikt:2.0.0")
     implementation("edu.stanford.nlp:stanford-corenlp:3.9.2")
     implementation("edu.stanford.nlp:stanford-corenlp:3.9.2:models")

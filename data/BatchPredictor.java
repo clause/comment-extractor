@@ -38,6 +38,12 @@ public interface BatchPredictor {
    */
   void setBatchSize(String size);
 
+
+   // Get the batch size to use. The implementer will prefer (but not  
+   // necessarily expect) this many instances to be passed in to 
+   // distributionsForInstances(). Allows the preferred batch size 
+   // to be encapsulated with the client.
+
   /**
    * Get the batch size to use. The implementer will prefer (but not  
    * necessarily expect) this many instances to be passed in to 
