@@ -26,7 +26,6 @@ class App : CliktCommand() {
             .file(exists = true, readable = true)
             .multiple()
 
-    private val formatter = Formatter()
     private val parser = JavaParser()
 
     override fun run() {
@@ -43,7 +42,7 @@ class App : CliktCommand() {
             for (file in javaFiles) {
 
                 val path = file.path
-                val source = formatter.formatSource(file.readText())
+                val source = file.readText()
 
                 val commentsCollection = parser.parse(source).commentsCollection.orElse(null) ?: continue
 

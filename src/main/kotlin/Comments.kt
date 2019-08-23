@@ -3,7 +3,7 @@ import com.github.javaparser.ast.comments.JavadocComment
 import com.github.javaparser.ast.comments.LineComment
 
 fun JavadocComment.toText(): String {
-    return parse().description.toText().replace(Regex("\\R"), " ")
+    return parse().description.toText().replace(Regex("\\s*\\R\\s*"), " ")
 }
 
 fun BlockComment.toText(): String {

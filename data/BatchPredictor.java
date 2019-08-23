@@ -71,4 +71,3 @@ public interface BatchPredictor {
    */
   boolean implementsMoreEfficientBatchPrediction();
 }
-
