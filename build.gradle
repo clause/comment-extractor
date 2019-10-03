@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.40'
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'com.github.ajalt:clikt:2.1.0'
+    implementation 'com.github.javaparser:javaparser-core:3.14.5'
+    implementation 'com.opencsv:opencsv:4.0'
+    implementation 'com.google.guava:guava:23.5-jre'
+    implementation 'edu.stanford.nlp:stanford-corenlp:3.9.2'
+    implementation 'edu.stanford.nlp:stanford-corenlp:3.9.2:models'
+
+    implementation 'org.slf4j:slf4j-jdk14:2.0.0-alpha0'
+    testCompile 'junit:junit:4.12'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+application {
+    mainClassName = "AppKt"
+}

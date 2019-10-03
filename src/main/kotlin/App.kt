@@ -7,7 +7,6 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.javaparser.JavaParser
-import com.google.googlejavaformat.java.Formatter
 import com.opencsv.CSVWriter
 import java.io.File
 
@@ -41,55 +40,23 @@ class App : CliktCommand() {
 
             for (file in javaFiles) {
 
-                val path = file.path
-                val source = file.readText()
+                val comments = parser.parse(file.readText()).commentsCollection.orElse(null) ?: continue
 
-                val commentsCollection = parser.parse(source).commentsCollection.orElse(null) ?: continue
-
-                for (comment in commentsCollection.blockComments) {
-
-                    val startLine = comment.range
-                            .map { it.begin.line }
-                            .orElse(-1)
-                            .toString()
-
-                    val text = comment.toText()
-                    val sentences = text.sentences()
-                    for (sentence in sentences) {
-                        out.writeNext(arrayOf(comment.javaClass.simpleName, path, startLine, sentence))
+                for (comment in comments.blockComments) {
+                    comment.toText().sentences().forEach { sentence ->
+                        out.writeNext(arrayOf("BlockComment", file.path, comment.startLine().toString(), sentence))
                     }
                 }
 
-                for (comment in commentsCollection.javadocComments) {
-
-                    val startLine = comment.range
-                            .map { it.begin.line }
-                            .orElse(-1)
-                            .toString()
-
-                    val text = comment.toText()
-                    val sentences = text.sentences()
-                    for (sentence in sentences) {
-                        out.writeNext(arrayOf(comment.javaClass.simpleName, path, startLine, sentence))
+                for (comment in comments.javadocComments) {
+                    comment.toText().sentences().forEach { sentence ->
+                        out.writeNext(arrayOf("JavadocComment", file.path, comment.startLine().toString(), sentence))
                     }
                 }
 
-                val lineCommentBlocks = commentsCollection.lineComments
-                        .contiguous { prev, current -> prev.range.isPresent && current.range.isPresent && prev.range.get().begin.line + 1 == current.range.get().begin.line }
-                        .toList()
-
-                for (comments in lineCommentBlocks) {
-                    val start = comments.first()
-
-                    val startLine = start.range
-                            .map { it.begin.line }
-                            .orElse(-1)
-                            .toString()
-
-                    val text = comments.joinToString(" ") { it.toText() }
-                    val sentences = text.sentences()
-                    for (sentence in sentences) {
-                        out.writeNext(arrayOf(start.javaClass.simpleName, path, startLine, sentence))
+                for (comment in comments.contiguousLineComments) {
+                    comment.toText().sentences().forEach { sentence ->
+                        out.writeNext(arrayOf("LineComment", file.path, comment.startLine().toString(), sentence))
                     }
                 }
             }
