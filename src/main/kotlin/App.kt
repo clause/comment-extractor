@@ -28,7 +28,7 @@ class App : CliktCommand() {
     private val parser = JavaParser()
 
     override fun run() {
-
+        
         CSVWriter(outputFile.bufferedWriter()).use { out ->
 
             out.writeNext(arrayOf("type", "path", "begin line", "comment"))
