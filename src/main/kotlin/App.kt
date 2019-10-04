@@ -28,36 +28,30 @@ class App : CliktCommand() {
     private val parser = JavaParser()
 
     override fun run() {
+        
+        CSVWriter(outputFile.bufferedWriter()).use { out ->
 
-        CSVWriter(outputFile.writer()).use { out ->
+            out.writeNext(arrayOf("type", "path", "start line", "comment"))
 
-            out.writeNext(arrayOf("type", "path", "comment range", "sentence"))
-
-            val javaFiles = sources.asSequence()
+            val files = sources.asSequence()
                     .flatMap { it.walk() }
                     .filter { it.isFile }
                     .filter { "java" == it.extension }
 
-            for (file in javaFiles) {
+            for (file in files) {
 
                 val comments = parser.parse(file.readText()).commentsCollection.orElse(null) ?: continue
 
                 for (comment in comments.blockComments) {
-                    comment.toText().sentences().forEach { sentence ->
-                        out.writeNext(arrayOf("BlockComment", file.path, comment.startLine().toString(), sentence))
-                    }
+                    out.writeNext(arrayOf("Block", file.path, comment.beginLine.toString(), comment.toText()))
                 }
 
                 for (comment in comments.javadocComments) {
-                    comment.toText().sentences().forEach { sentence ->
-                        out.writeNext(arrayOf("JavadocComment", file.path, comment.startLine().toString(), sentence))
-                    }
+                    out.writeNext(arrayOf("Javadoc", file.path, comment.beginLine.toString(), comment.toText()))
                 }
 
                 for (comment in comments.contiguousLineComments) {
-                    comment.toText().sentences().forEach { sentence ->
-                        out.writeNext(arrayOf("LineComment", file.path, comment.startLine().toString(), sentence))
-                    }
+                    out.writeNext(arrayOf("Line", file.path, comment.beginLine.toString(), comment.toText()))
                 }
             }
         }

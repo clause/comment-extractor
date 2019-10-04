@@ -1,15 +1,19 @@
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.comments.*
+import com.github.javaparser.ast.visitor.GenericVisitor
+import com.github.javaparser.ast.visitor.VoidVisitor
 
-fun Comment.startLine(): Int = range.map { it.begin.line }.orElse(-1)
+val Comment.beginLine: Int
+    get() = range.map { it.begin.line }.orElse(-1)
 
-val CommentsCollection.contiguousLineComments: Sequence<ContiguousLineComments>
+val CommentsCollection.contiguousLineComments: Sequence<ContiguousLineComment>
     get() = lineComments
             .sortedWith(Node.NODE_BY_BEGIN_POSITION)
-            .contiguous { prev, current -> prev.startLine() + 1 == current.startLine() }
+            .contiguous { prev, current -> prev.beginLine + 1 == current.beginLine }
 
 fun JavadocComment.toText(): String {
-    return parse().description.toText().replace(Regex("\\s*\\R\\s*"), " ")
+    return parse().description.toText()
+            .replace(Regex("\\s*\\R\\s*"), " ")
 }
 
 fun BlockComment.toText(): String {
@@ -28,7 +32,9 @@ fun LineComment.toText(): String {
             .replace(Regex("\\R"), "")
 }
 
-typealias ContiguousLineComments = List<LineComment>
+typealias ContiguousLineComment = List<LineComment>
 
-fun ContiguousLineComments.startLine(): Int = first().startLine()
-fun ContiguousLineComments.toText(): String = joinToString(" ") { it.toText() }
+val ContiguousLineComment.beginLine: Int
+    get() = first().beginLine
+
+fun ContiguousLineComment.toText(): String = joinToString(" ") { it.toText() }
